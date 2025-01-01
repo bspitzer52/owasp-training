@@ -1,64 +1,37 @@
 import requests
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
 from termcolor import colored
 from time import time
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
 
-# Function to initialize Selenium WebDriver
-def init_driver():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")  # Run headless (no browser window)
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--no-sandbox")
-    driver = webdriver.Chrome(options=chrome_options)
+# Function to initialize the Selenium WebDriver
+def get_selenium_driver():
+    options = webdriver.ChromeOptions()
+    options.add_argument("--headless")  # Run in headless mode
+    options.add_argument("--disable-gpu")  # Disable GPU (optional)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
     return driver
 
-# Updated get_inputs function using Selenium with explicit wait
+# Function to find and return input boxes on the page using Selenium
 def get_inputs(url, driver):
-    # Load the page using Selenium
-    driver.get(url)
-
-    # Wait until some input elements (like a search bar) are loaded
     try:
-        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input")))
-    except:
-        print("No input fields found after waiting.")
+        driver.get(url)  # Use Selenium to load the page
+        inputs = driver.find_elements(By.TAG_NAME, 'input')  # Find all input elements
+        return inputs
+    except Exception as e:
+        print(e)
         return []
 
-    # Give it time to load dynamic content if needed
-    driver.implicitly_wait(5)
-
-    soup = BeautifulSoup(driver.page_source, "html.parser")
-    list_of_inputs = []
-
-    # Find all <input> fields including different types like text, search, etc.
-    for i in soup.find_all("input"):
-        input_type = i.get("type", "").lower()
-
-        # You can adjust the types here as needed
-        if input_type in ["text", "search", "email", "password", "number", "tel", "url"]:
-            list_of_inputs.append(i)
-
-    # Also consider textareas and selects, common for search forms or user input
-    for i in soup.find_all("textarea"):
-        list_of_inputs.append(i)
-
-    for i in soup.find_all("select"):
-        list_of_inputs.append(i)
-
-    return list_of_inputs
-
-def how_many_forms(url, driver):
+def how_many_forms(url):
     print("Fetching Forms List Please Wait..")
     links = links_to_page(url)
     number_of_forms = {}
     for i in links:
-        driver.get(i)
-        soup = BeautifulSoup(driver.page_source, "html.parser")
+        r = requests.get(i)
+        soup = BeautifulSoup(r.text, "html.parser")
         form = soup.find_all("form")
         number_of_forms.update({i: len(form)})
     return number_of_forms
@@ -136,7 +109,11 @@ def find_xss(url, payload, driver):
             for i in inputs:
                 name = str(i.get("name"))
                 r = requests.get(url + "?" + name + "=" + pyld)
-                if pyld in str(r.content, "utf-8"):
+                
+                # Ensure that the content is decoded properly before checking
+                response_content = r.content.decode("utf-8", errors="ignore")
+
+                if pyld in response_content:
                     xss_flag = True
 
                     print()
@@ -159,6 +136,7 @@ def payloads(file):
     with open(file, "rb") as f:
         payloads = f.read().splitlines()
     return payloads
+
 
 if __name__ == '__main__':
     intro = '''
@@ -186,9 +164,9 @@ if __name__ == '__main__':
         # Define the payload file directly
         payload_file = "payload.txt"  # File is in the same directory
         payload = payloads(payload_file)  # Read payloads from payload.txt
-
-        # Initialize the Selenium driver
-        driver = init_driver()
+        
+        # Initialize the Selenium WebDriver
+        driver = get_selenium_driver()
 
         if choice == "1":
             url = input("Please input the url -> ")
@@ -222,7 +200,7 @@ if __name__ == '__main__':
                 print(i)
         elif choice == "4":
             url = input("URL Please -> ")
-            forms = how_many_forms(url, driver)
+            forms = how_many_forms(url)
             for i, j in forms.items():
                 print(i, "->", j, "form(s)")
         elif choice == "5":
@@ -231,7 +209,11 @@ if __name__ == '__main__':
             for i in inputs:
                 print(i)
         else:
-            print("Bad Choice,Try Your Luck Next time")
+            print("Bad Choice, Try Your Luck Next time")
             exit(1)
+
     except KeyboardInterrupt:
-        print("Bye Bye..Exiting")
+        print("Bye Bye.. Exiting")
+    finally:
+        # Close the Selenium driver after usage
+        driver.quit()
