@@ -442,7 +442,7 @@ class XSSspider(CrawlSpider):
         """
         Make the payload with a unique delim
         """
-        two_rand_letters = random.choice(string.lowercase) + random.choice(string.lowercase)
+        two_rand_letters = random.choice(string.ascii_lowercase) + random.choice(string.ascii_lowercase)
         delim_str = self.delim + two_rand_letters
         payload = delim_str + self.test_str + delim_str + ';9'
         return payload
