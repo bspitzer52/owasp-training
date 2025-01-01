@@ -249,7 +249,7 @@ class XSSspider(CrawlSpider):
 
         url = None
         for i in all_frames:
-            if type(i) == unicode:
+            if isinstance(i, str):
                 i = str(i).strip()
             # Nonrelative path
             if '://' in i:
