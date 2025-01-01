@@ -2,6 +2,97 @@ import requests
 from bs4 import BeautifulSoup
 from termcolor import colored
 from time import time
+<<<<<<< HEAD
+
+def how_many_forms(url):
+    print("Fetching Forms List Please Wait..")
+    links = links_to_page(url)
+    number_of_forms = {}
+    for i in links:
+        r = requests.get(i)
+        soup = BeautifulSoup(r.text, "html.parser")
+        form = soup.find_all("form")
+        number_of_forms.update({i: len(form)})
+    return number_of_forms
+
+def links_to_page(url):
+    set_for_links = set()
+    try:
+        if ("https://" not in url and "http://" not in url):
+            r = requests.get("http://{}".format(url))
+            first_url = "http://{}".format(url)
+        else:
+            first_url = url
+            r = requests.get(url)
+    except Exception as e:
+        print(e)
+        pass
+    soup = BeautifulSoup(r.text, "html.parser")
+    links = soup.find_all("a")
+
+    if ("https://" in url or "http://" in url):
+        url = url.split("//")[1]
+        if ("www." in url):
+            url = url.split("www.")[1]
+        if ("/" in url):
+            url = url.split("/")[0]
+
+    for i in links:
+        actual_url = i.get("href")
+        url_in_tag = str(i.get("href"))
+        if ("https://" in url_in_tag or "http://" in url_in_tag):
+            url_in_tag = url_in_tag.split("//")[1]
+        if ("www." in url_in_tag):
+            url_in_tag = url_in_tag.split("www.")[1]
+        if ("/" in url_in_tag):
+            url_in_tag = url_in_tag.split("/")[0]
+        if (url in url_in_tag):
+            set_for_links.add(actual_url)
+
+        try:
+            if (url_in_tag[0] == "."):
+                actual_url = first_url + url_in_tag[1:]
+                set_for_links.add(actual_url)
+            elif(url_in_tag[0] != "/" and url[-1] != "/"):
+                actual_url = first_url + "/" + url_in_tag
+                set_for_links.add(actual_url)
+            elif(url_in_tag[0] == "/" and url[-1] == "/"):
+                actual_url = first_url + url_in_tag[1:]
+                set_for_links.add(actual_url)
+            else:
+                actual_url = first_url + url_in_tag
+                set_for_links.add(actual_url)
+        except:
+            pass
+
+    return set_for_links
+
+# Updated get_inputs function to account for various types of inputs
+def get_inputs(url):
+    try:
+        if ("https://" not in url and "http://" not in url):
+            r = requests.get("http://{}".format(url))
+        else:
+            r = requests.get(url)
+    except Exception as e:
+        print(e)
+        pass
+
+    soup = BeautifulSoup(r.content, "html.parser")
+    list_of_inputs = []
+
+    # Find all <input> fields including different types like text, search, etc.
+    for i in soup.find_all("input"):
+        input_type = i.get("type", "").lower()
+        
+        # You can adjust the types here as needed
+        if input_type in ["text", "search", "email", "password", "number", "tel", "url"]:
+            list_of_inputs.append(i)
+
+    return list_of_inputs
+
+def find_xss(url, payload):
+=======
 def how_many_forms(url):
     print("Fetching Forms List Please Wait..")
     links = links_to_page(url)
@@ -74,6 +165,7 @@ def get_inputs(url):
         list_of_inputs.append(i)
     return list_of_inputs
 def find_xss(url):
+>>>>>>> 6a7d9cb96e4acad9ba38269f0b6d1c0e34cf6fc7
     xss_flag = False
     try:
         if ("https://" not in url and "http://" not in url):
