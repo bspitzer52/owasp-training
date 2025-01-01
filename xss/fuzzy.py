@@ -56,17 +56,22 @@ def signal_handler(sig, frame):
 
 def get_installed_chrome_version():
     try:
-        # Try to get version from google-chrome
-        result = subprocess.run(['google-chrome', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        # Try to get version from google-chrome-stable
+        result = subprocess.run(['google-chrome-stable', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode == 0:
             return result.stdout.decode('utf-8').strip().split(' ')[-1]
         
-        # If not found, try chromium
+        # If not found, try google-chrome (alternative name)
+        result = subprocess.run(['google-chrome', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            return result.stdout.decode('utf-8').strip().split(' ')[-1]
+
+        # If not found, try chromium (alternative name)
         result = subprocess.run(['chromium', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if result.returncode == 0:
             return result.stdout.decode('utf-8').strip().split(' ')[-1]
 
-        # If Chrome or Chromium is not installed, raise an exception
+        # If none of these are found, raise an exception
         raise Exception("Chrome or Chromium is not installed.")
         
     except Exception as e:
