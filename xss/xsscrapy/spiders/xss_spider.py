@@ -408,7 +408,7 @@ class XSSspider(CrawlSpider):
         changed_params = []
         modified = False
         # Create a list of lists where num of lists = len(params)
-        for x in xrange(0, len(url_params)):
+        for x in range(0, len(url_params)):
             single_url_params = []
 
             # Make the payload
@@ -510,7 +510,7 @@ class XSSspider(CrawlSpider):
         # This preserves the order of the URL parameters and will also
         # test each parameter individually instead of all at once
         allModdedParams[payload] = []
-        for x in xrange(0, len(params)):
+        for x in range(0, len(params)):
             for p in params:
                 param = p[0]
                 value = p[1]
