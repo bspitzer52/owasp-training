@@ -16,6 +16,24 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
 from colorama import Fore, init, Style
+import argparse
+import threading
+import time
+import signal
+import sys
+import random
+import re
+import winreg as reg
+from selenium.webdriver.common.by import By
+from urllib.parse import urlparse
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.chrome import ChromeDriverManager
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import UnexpectedAlertPresentException, NoAlertPresentException
+from colorama import Fore, init, Style
 
 # Initialize colorama
 init(autoreset=True)
