@@ -1,143 +1,102 @@
-import requests
+import time
+from selenium import webdriver
+from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.by import By
+from selenium.webdriver.chrome.options import Options
+from webdriver_manager.chrome import ChromeDriverManager
 from bs4 import BeautifulSoup
 from termcolor import colored
-from time import time, sleep
 
-# Function to find how many forms are on a page
-def how_many_forms(url):
-    print("Fetching Forms List Please Wait..")
-    links = links_to_page(url)
-    number_of_forms = {}
-    for i in links:
-        r = requests.get(i)
-        soup = BeautifulSoup(r.text, "html.parser")
-        form = soup.find_all("form")
-        number_of_forms.update({i: len(form)})
-    return number_of_forms
 
-# Function to fetch all the links from the page
+# Function to get selenium driver for dynamic content rendering
+def get_selenium_driver():
+    options = Options()
+    options.add_argument("--headless")  # Run headless (without GUI)
+    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
+    return driver
+
+
+# Function to fetch all links from the page using Selenium
 def links_to_page(url):
-    set_for_links = set()
-    try:
-        if ("https://" not in url and "http://" not in url):
-            r = requests.get("http://{}".format(url))
-            first_url = "http://{}".format(url)
-        else:
-            first_url = url
-            r = requests.get(url)
-    except Exception as e:
-        print(e)
-        pass
-    soup = BeautifulSoup(r.text, "html.parser")
+    driver = get_selenium_driver()
+    driver.get(url)
+    time.sleep(3)  # Allow time for JavaScript to render content
+    soup = BeautifulSoup(driver.page_source, "html.parser")
     links = soup.find_all("a")
+    driver.quit()
 
-    if ("https://" in url or "http://" in url):
-        url = url.split("//")[1]
-        if ("www." in url):
-            url = url.split("www.")[1]
-        if ("/" in url):
-            url = url.split("/")[0]
-
+    set_for_links = set()
     for i in links:
         actual_url = i.get("href")
-        url_in_tag = str(i.get("href"))
-        if ("https://" in url_in_tag or "http://" in url_in_tag):
-            url_in_tag = url_in_tag.split("//")[1]
-        if ("www." in url_in_tag):
-            url_in_tag = url_in_tag.split("www.")[1]
-        if ("/" in url_in_tag):
-            url_in_tag = url_in_tag.split("/")[0]
-        if (url in url_in_tag):
-            set_for_links.add(actual_url)
-
-        try:
-            if (url_in_tag[0] == "."):
-                actual_url = first_url + url_in_tag[1:]
-                set_for_links.add(actual_url)
-            elif(url_in_tag[0] != "/" and url[-1] != "/"):
-                actual_url = first_url + "/" + url_in_tag
-                set_for_links.add(actual_url)
-            elif(url_in_tag[0] == "/" and url[-1] == "/"):
-                actual_url = first_url + url_in_tag[1:]
-                set_for_links.add(actual_url)
-            else:
-                actual_url = first_url + url_in_tag
-                set_for_links.add(actual_url)
-        except:
-            pass
+        set_for_links.add(actual_url)
 
     return set_for_links
 
-# Refined function to get input fields with a delay
+
+# Function to get input fields from a page using Selenium
 def get_inputs(url):
-    try:
-        if ("https://" not in url and "http://" not in url):
-            r = requests.get("http://{}".format(url))
-        else:
-            r = requests.get(url)
-        
-        # Add artificial delay to simulate waiting for dynamic content
-        sleep(3)  # Wait for 3 seconds (you can adjust this time)
-    except Exception as e:
-        print(e)
-        pass
+    driver = get_selenium_driver()
+    driver.get(url)
+    time.sleep(3)  # Allow time for JavaScript to render content
+    soup = BeautifulSoup(driver.page_source, "html.parser")
+    driver.quit()
 
-    soup = BeautifulSoup(r.content, "html.parser")
     list_of_inputs = []
-
-    # Search for form input tags including text areas and search fields
+    # Search for input tags
     for i in soup.find_all(["input", "textarea"]):
-        list_of_inputs.append(i)
+        if i.get("type") != "hidden":  # Exclude hidden inputs
+            list_of_inputs.append(i)
 
     return list_of_inputs
 
-# Function to find XSS vulnerability
+
+# Function to find XSS vulnerability on a page using payloads
 def find_xss(url, payload):
     xss_flag = False
-    try:
-        if ("https://" not in url and "http://" not in url):
-            url = "http://{}".format(url)
-    except Exception as e:
-        print(e)
-        pass
-
     print(colored("Request Sent to Site {}".format(url), "green"))
 
     inputs = get_inputs(url)  # Get input boxes
     if len(inputs) == 0:
         return -1
     print(colored("Finding input box in the page..", "green"))
-    start = time()
+    start = time.time()
+
     for pyld in payload:
         try:
             for i in inputs:
                 name = str(i.get("name"))
-                if name:
-                    r = requests.get(url + "?" + name + "=" + pyld)
-                    if pyld in str(r.content, "utf-8"):
+                if name:  # Only use non-empty names
+                    driver = get_selenium_driver()
+                    driver.get(url + "?" + name + "=" + pyld)
+                    time.sleep(2)  # Allow page to load before checking content
+                    if pyld in driver.page_source:
                         xss_flag = True
 
                         print()
                         print(colored("#FOUND -> Payload:{}".format(pyld), "green"))
-                        end = time()
+                        end = time.time()
                         ctime = end - start
                         print(colored("Vulnerable URL -> {}".format(url), "red"))
                         print(colored("Vulnerable Input Box-> {}".format(i), "red"))
                         if xss_flag:
                             print()
                             print(colored("Time:{} Seconds".format(ctime), "white"))
+                            driver.quit()
                             return 1
                     else:
                         print(colored("#NOT FOUND -> Payload:{}".format(pyld), "red"))
+                    driver.quit()
         except Exception as e:
             print(e)
             pass
+
 
 # Function to load the payloads from a file
 def payloads(file):
     with open(file, "rb") as f:
         payloads = f.read().splitlines()
     return payloads
+
 
 if __name__ == '__main__':
     intro = '''
