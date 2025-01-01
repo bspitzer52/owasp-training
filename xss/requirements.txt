@@ -1,4 +1,3 @@
-Requests
-bs4
-termcolor
 selenium
+webdriver-manager
+colorama
