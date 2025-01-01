@@ -9,7 +9,8 @@ from xsscrapy.loginform import fill_login_form
 from urllib.parse import urlparse, parse_qsl, urljoin, urlunparse, urlunsplit
 
 from scrapy.http.cookies import CookieJar
-from cookielib import Cookie
+from http.cookiejar import Cookie
+
 
 from lxml.html import soupparser, fromstring
 import lxml.etree
