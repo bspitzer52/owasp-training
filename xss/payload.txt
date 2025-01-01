@@ -1,0 +1,11 @@
+<IMG SRC="x" onerror="console.log('XSS detected')">
+<svg/onload="console.log('XSS detected')">
+<iframe src="javascript:console.log('XSS detected')"></iframe>
+<details open><summary>Test</summary><div onfocus="console.log('XSS detected')"></div></details>
+<svg><g onload="console.log('XSS detected')"></g></svg>
+<INPUT type="text" value="XSS" onfocus="console.log('XSS detected')">
+<script>/* Test XSS detection */</script>
+<math><maction actiontype="alert" onactivate="console.log('XSS detected')">Test</maction></math>
+<IMG SRC="x" onerror="alert('XSS detected')">
+<INPUT type="text" value="XSS" onfocus="alert('XSS detected')">
+<svg xmlns="http://www.w3.org/2000/svg"><script>console.log('XSS detected')</script></svg>
