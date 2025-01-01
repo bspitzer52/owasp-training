@@ -6,7 +6,7 @@ from scrapy.http import FormRequest, Request
 from scrapy.selector import Selector
 from xsscrapy.items import inj_resp
 from xsscrapy.loginform import fill_login_form
-from urlparse import urlparse, parse_qsl, urljoin, urlunparse, urlunsplit
+from urllib.parse import urlparse, parse_qsl, urljoin, urlunparse, urlunsplit
 
 from scrapy.http.cookies import CookieJar
 from cookielib import Cookie
