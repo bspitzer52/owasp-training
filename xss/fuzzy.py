@@ -1,7 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from termcolor import colored
-from time import time
+from time import time, sleep
 
 # Function to find how many forms are on a page
 def how_many_forms(url):
@@ -68,13 +68,16 @@ def links_to_page(url):
 
     return set_for_links
 
-# Refined function to get input fields
+# Refined function to get input fields with a delay
 def get_inputs(url):
     try:
         if ("https://" not in url and "http://" not in url):
             r = requests.get("http://{}".format(url))
         else:
             r = requests.get(url)
+        
+        # Add artificial delay to simulate waiting for dynamic content
+        sleep(3)  # Wait for 3 seconds (you can adjust this time)
     except Exception as e:
         print(e)
         pass
