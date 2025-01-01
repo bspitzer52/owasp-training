@@ -123,27 +123,19 @@ class XSSCharFinder(object):
         raise DropItem('No XSS vulns in %s. type = %s, %s' % (resp_url, meta['xss_place'], meta['xss_param']))
 
     def sqli_check(self, body, orig_body):
-    '''Do a quick lookup in the response body for SQL errors. 
-    Both w3af's and DSSS.py's methods are in here but sectoolsmarket.com shows DSSS as having better detection rates so using theirs'''
 
-    # Taken from Damn Small SQLi Scanner
-    DBMS_ERRORS = {
-        "MySQL":                (r"SQL syntax.*MySQL", r"Warning.*mysql_.*", r"valid MySQL result", r"MySqlClient\."),
-        "PostgreSQL":           (r"PostgreSQL.*ERROR", r"Warning.*\Wpg_.*", r"valid PostgreSQL result", r"Npgsql\."),
-        "Microsoft SQL Server": (r"Driver.* SQL[\-\_\ ]*Server", r"OLE DB.* SQL Server", r"(\W|\A)SQL Server.*Driver", 
-                                 r"Warning.*mssql_.*", r"(\W|\A)SQL Server.*[0-9a-fA-F]{8}", r"(?s)Exception.*\WSystem\.Data\.SqlClient\.", 
-                                 r"(?s)Exception.*\WRoadhouse\.Cms\."),
-        "Microsoft Access":     (r"Microsoft Access Driver", r"JET Database Engine", r"Access Database Engine"),
-        "Oracle":               (r"ORA-[0-9][0-9][0-9][0-9]", r"Oracle error", r"Oracle.*Driver", r"Warning.*\Woci_.*", r"Warning.*\Wora_.*")
-    }
+        # Taken from Damn Small SQLi Scanner
+        DBMS_ERRORS = {"MySQL":                (r"SQL syntax.*MySQL", r"Warning.*mysql_.*", r"valid MySQL result", r"MySqlClient\."),
+                       "PostgreSQL":           (r"PostgreSQL.*ERROR", r"Warning.*\Wpg_.*", r"valid PostgreSQL result", r"Npgsql\."),
+                       "Microsoft SQL Server": (r"Driver.* SQL[\-\_\ ]*Server", r"OLE DB.* SQL Server", r"(\W|\A)SQL Server.*Driver", r"Warning.*mssql_.*",
+                                                r"(\W|\A)SQL Server.*[0-9a-fA-F]{8}", r"(?s)Exception.*\WSystem\.Data\.SqlClient\.", r"(?s)Exception.*\WRoadhouse\.Cms\."),
+                       "Microsoft Access":     (r"Microsoft Access Driver", r"JET Database Engine", r"Access Database Engine"),
+                       "Oracle":               (r"ORA-[0-9][0-9][0-9][0-9]", r"Oracle error", r"Oracle.*Driver", r"Warning.*\Woci_.*", r"Warning.*\Wora_.*")}
+        for (dbms, regex) in ((dbms, regex) for dbms in DBMS_ERRORS for regex in DBMS_ERRORS[dbms]):
+            if re.search(regex, body, re.I) and not re.search(regex, orig_body, re.I):
+                return (dbms, regex)
+        return None, None
 
-    # Use dictionary items to iterate over DBMS and their corresponding regex
-    for dbms, regex in DBMS_ERRORS.items():
-        for pattern in regex:
-            if re.search(pattern, body, re.I) and not re.search(pattern, orig_body, re.I):
-                return (dbms, pattern)
-
-    return None, None
         # Taken from w3af
         #SQL_errors = ("System.Data.OleDb.OleDbException",
         #              "[SQL Server]",
