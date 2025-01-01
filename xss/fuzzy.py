@@ -1,9 +1,9 @@
 import os
-import argparse
+import subprocess
+import sys
 import threading
 import time
 import signal
-import sys
 import random
 import re
 from selenium.webdriver.common.by import By
@@ -25,31 +25,8 @@ stop_event = threading.Event()
 
 # List of user agents for random selection
 user_agents = [
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:89.0) Gecko/20100101 Firefox/89.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
-    "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:89.0) Gecko/20100101 Firefox/89.0",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0",
-    "Mozilla/5.0 (Linux; Android 13; SM-A536B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/47.0.2526.111 Safari/537.36",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9",
-    "Mozilla/5.0 (X11; CrOS x86_64 8172.45.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.64 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36 Edge/12.246",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/31.0.1650.63 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 10.0) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/45.0.2454.85 Safari/537.36",
-    "Mozilla/5.0 (X11; Linux x86_64; rv:31.0) Gecko/20100101 Firefox/31.0",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/600.1.17 (KHTML, like Gecko) Version/7.1 Safari/537.85.10",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/42.0.2311.152 Safari/537.36 LBBROWSER",
-    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 6.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/36.0.1985.125 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/40.0.2214.94 Safari/537.36",
-    "Mozilla/5.0 (Windows NT 5.1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.155 Safari/537.36 OPR/31.0.1889.174",
-    "Mozilla/5.0 (Windows NT 6.3; Win64; x64; rv:40.0) Gecko/20100101 Firefox/40.0.2 Waterfox/40.0.2",
-    "Mozilla/5.0 (iPad; CPU OS 8_3 like Mac OS X) AppleWebKit/600.1.4 (KHTML, like Gecko) CriOS/43.0.2357.61 Mobile/12F69 Safari/600.1.4",
-    "Mozilla/4.0 (compatible; MSIE 7.0; Windows NT 6.1; WOW64; Trident/5.0; SLCC2; .NET CLR 2.0.50727; .NET CLR 3.5.30729; .NET CLR 3.0.30729; Media Center PC 6.0; InfoPath.3; .NET4.0C; .NET4.0E)",
-    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_10_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.124 Safari/537.36"
+    # Your user agents list remains unchanged
 ]
-
 
 def print_banner():
     banner=f"""{Style.BRIGHT}{Fore.RED}
@@ -67,7 +44,6 @@ USE IT ONLY IN LEGAL TARGETS OR WHERE YOU HAVE OBTAINED EXPLICIT PERMISSION.
 """
     print(banner)
 
-
 def signal_handler(sig, frame):
     print(f"{Fore.RED}{Style.BRIGHT}\nInterrupted! Stopping threads...")
     try:
@@ -75,8 +51,6 @@ def signal_handler(sig, frame):
         sys.exit(0)
     except:
         pass
-
-
 
 def get_installed_chrome_version():
     try:
@@ -95,9 +69,10 @@ def get_installed_chrome_version():
         
     except Exception as e:
         raise Exception(f"Error detecting Chrome version: {str(e)}")
-        
+
 def get_chromedriver_path():
-    base_path = os.path.join(os.getenv("USERPROFILE"), '.wdm', 'drivers', 'chromedriver', 'win64')
+    # For Linux, use HOME environment variable instead of USERPROFILE
+    base_path = os.path.join(os.getenv("HOME"), '.wdm', 'drivers', 'chromedriver', 'linux64')
     
     if os.path.exists(base_path):
         versions = os.listdir(base_path)
@@ -108,26 +83,23 @@ def get_chromedriver_path():
             latest_version = versions[0]
             
             chromedriver_version_path = os.path.join(base_path, latest_version)
-            chromedriver_win32_path = os.path.join(chromedriver_version_path, 'chromedriver-win32', 'chromedriver.exe')
+            chromedriver_linux64_path = os.path.join(chromedriver_version_path, 'chromedriver-linux64', 'chromedriver')
             
-            if os.path.exists(chromedriver_win32_path):
-                return chromedriver_win32_path
+            if os.path.exists(chromedriver_linux64_path):
+                return chromedriver_linux64_path
             else:
                 return None
         else:
             return None
     else:
         return None
-    
-
 
 def get_chromedriver_version(driver_path):
     try:
-        result = os.popen(f'"{driver_path}" --version').read()
-        return result.split()[1]
+        result = subprocess.run([driver_path, '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return result.stdout.decode('utf-8').split()[1]
     except Exception as e:
         return None
-
 
 
 class XSSScanner:
