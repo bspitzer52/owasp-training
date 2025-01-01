@@ -2,29 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 from termcolor import colored
 from time import time
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
 
-# Function to initialize the Selenium WebDriver
-def get_selenium_driver():
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Run in headless mode
-    options.add_argument("--disable-gpu")  # Disable GPU (optional)
-    driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
-    return driver
-
-# Function to find and return input boxes on the page using Selenium
-def get_inputs(url, driver):
-    try:
-        driver.get(url)  # Use Selenium to load the page
-        inputs = driver.find_elements(By.TAG_NAME, 'input')  # Find all input elements
-        return inputs
-    except Exception as e:
-        print(e)
-        return []
-
+# Function to find how many forms are on a page
 def how_many_forms(url):
     print("Fetching Forms List Please Wait..")
     links = links_to_page(url)
@@ -36,6 +15,7 @@ def how_many_forms(url):
         number_of_forms.update({i: len(form)})
     return number_of_forms
 
+# Function to fetch all the links from the page
 def links_to_page(url):
     set_for_links = set()
     try:
@@ -88,7 +68,28 @@ def links_to_page(url):
 
     return set_for_links
 
-def find_xss(url, payload, driver):
+# Refined function to get input fields
+def get_inputs(url):
+    try:
+        if ("https://" not in url and "http://" not in url):
+            r = requests.get("http://{}".format(url))
+        else:
+            r = requests.get(url)
+    except Exception as e:
+        print(e)
+        pass
+
+    soup = BeautifulSoup(r.content, "html.parser")
+    list_of_inputs = []
+
+    # Search for form input tags including text areas and search fields
+    for i in soup.find_all(["input", "textarea"]):
+        list_of_inputs.append(i)
+
+    return list_of_inputs
+
+# Function to find XSS vulnerability
+def find_xss(url, payload):
     xss_flag = False
     try:
         if ("https://" not in url and "http://" not in url):
@@ -99,7 +100,7 @@ def find_xss(url, payload, driver):
 
     print(colored("Request Sent to Site {}".format(url), "green"))
 
-    inputs = get_inputs(url, driver)  # Get input boxes using Selenium
+    inputs = get_inputs(url)  # Get input boxes
     if len(inputs) == 0:
         return -1
     print(colored("Finding input box in the page..", "green"))
@@ -108,35 +109,32 @@ def find_xss(url, payload, driver):
         try:
             for i in inputs:
                 name = str(i.get("name"))
-                r = requests.get(url + "?" + name + "=" + pyld)
-                
-                # Ensure that the content is decoded properly before checking
-                response_content = r.content.decode("utf-8", errors="ignore")
+                if name:
+                    r = requests.get(url + "?" + name + "=" + pyld)
+                    if pyld in str(r.content, "utf-8"):
+                        xss_flag = True
 
-                if pyld in response_content:
-                    xss_flag = True
-
-                    print()
-                    print(colored("#FOUND -> Payload:{}".format(pyld), "green"))
-                    end = time()
-                    ctime = end - start
-                    print(colored("Vulnerable URL -> {}".format(url), "red"))
-                    print(colored("Vulnerable Input Box-> {}".format(i), "red"))
-                    if xss_flag:
                         print()
-                        print(colored("Time:{} Seconds".format(ctime), "white"))
-                        return 1
-                else:
-                    print(colored("#NOT FOUND -> Payload:{}".format(pyld), "red"))
+                        print(colored("#FOUND -> Payload:{}".format(pyld), "green"))
+                        end = time()
+                        ctime = end - start
+                        print(colored("Vulnerable URL -> {}".format(url), "red"))
+                        print(colored("Vulnerable Input Box-> {}".format(i), "red"))
+                        if xss_flag:
+                            print()
+                            print(colored("Time:{} Seconds".format(ctime), "white"))
+                            return 1
+                    else:
+                        print(colored("#NOT FOUND -> Payload:{}".format(pyld), "red"))
         except Exception as e:
             print(e)
             pass
 
+# Function to load the payloads from a file
 def payloads(file):
     with open(file, "rb") as f:
         payloads = f.read().splitlines()
     return payloads
-
 
 if __name__ == '__main__':
     intro = '''
@@ -151,14 +149,12 @@ if __name__ == '__main__':
     print()
 
     choices = '''
-    1)XSS URL Scan
-    2)Total Scan
-    3)Fetch all Links
-    4)Fetch Form Count
-    5)Fetch Input Box
+    1) XSS URL Scan
+    2) Total Scan
+    3) Fetch all Links
+    4) Fetch Form Count
+    5) Fetch Input Box
     '''
-    driver = None  # Initialize driver variable here, to avoid reference before assignment
-
     try:
         print(choices)
         choice = input("Make a Choice -->")
@@ -166,13 +162,10 @@ if __name__ == '__main__':
         # Define the payload file directly
         payload_file = "payload.txt"  # File is in the same directory
         payload = payloads(payload_file)  # Read payloads from payload.txt
-        
-        # Initialize the Selenium WebDriver (Ensure it's initialized before use)
-        driver = get_selenium_driver()
 
         if choice == "1":
             url = input("Please input the url -> ")
-            result = find_xss(url, payload, driver)
+            result = find_xss(url, payload)
             if result == -1:
                 print("No input box found to attack.")
             else:
@@ -182,7 +175,7 @@ if __name__ == '__main__':
             links = links_to_page(url)
             for link in links:
                 try:
-                    result = find_xss(link, payload, driver)
+                    result = find_xss(link, payload)
                     if result == -1:
                         print("No input box found to attack.")
                     elif result == 1:
@@ -207,16 +200,11 @@ if __name__ == '__main__':
                 print(i, "->", j, "form(s)")
         elif choice == "5":
             url = input("URL Please -> ")
-            inputs = get_inputs(url, driver)
+            inputs = get_inputs(url)
             for i in inputs:
                 print(i)
         else:
             print("Bad Choice, Try Your Luck Next time")
             exit(1)
-
     except KeyboardInterrupt:
-        print("Bye Bye.. Exiting")
-    finally:
-        # Ensure that the driver is only quit if it's initialized
-        if driver:
-            driver.quit()
+        print("Bye Bye..Exiting")
