@@ -123,7 +123,7 @@ class XSSCharFinder(object):
         raise DropItem('No XSS vulns in %s. type = %s, %s' % (resp_url, meta['xss_place'], meta['xss_param']))
 
     def sqli_check(self, body, orig_body):
-    # DBMS error patterns to identify potential SQL injection points
+        # DBMS error patterns to identify potential SQL injection points
         DBMS_ERRORS = {
             "MySQL": (r"SQL syntax.*MySQL", r"Warning.*mysql_.*", r"valid MySQL result", r"MySqlClient\."),
             "PostgreSQL": (r"PostgreSQL.*ERROR", r"Warning.*\Wpg_.*", r"valid PostgreSQL result", r"Npgsql\."),
@@ -132,6 +132,12 @@ class XSSCharFinder(object):
             "Microsoft Access": (r"Microsoft Access Driver", r"JET Database Engine", r"Access Database Engine"),
             "Oracle": (r"ORA-[0-9][0-9][0-9][0-9]", r"Oracle error", r"Oracle.*Driver", r"Warning.*\Woci_.*", r"Warning.*\Wora_.*")
         }
+
+        # Decode bytes to string if necessary
+        if isinstance(body, bytes):
+            body = body.decode('utf-8', errors='ignore')  # Decode bytes to str, ignoring errors
+        if isinstance(orig_body, bytes):
+            orig_body = orig_body.decode('utf-8', errors='ignore')  # Decode bytes to str, ignoring errors
 
         # Iterate through DBMS errors and their patterns
         for dbms, regex_patterns in DBMS_ERRORS.items():
