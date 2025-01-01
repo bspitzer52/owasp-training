@@ -6,7 +6,6 @@ import signal
 import sys
 import random
 import re
-import winreg as reg
 from selenium.webdriver.common.by import By
 from urllib.parse import urlparse
 from selenium import webdriver
@@ -78,23 +77,31 @@ def signal_handler(sig, frame):
         pass
 
 
+
 def get_installed_chrome_version():
     try:
-        key = reg.OpenKey(reg.HKEY_CURRENT_USER, r"Software\\Google\\Chrome\\BLBeacon")
-        version, _ = reg.QueryValueEx(key, "version")
-        return version
-    except FileNotFoundError:
-        try:
-            key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"Software\\Google\\Chrome\\BLBeacon")
-            version, _ = reg.QueryValueEx(key, "version")
-            return version
-        except FileNotFoundError:
-            try:
-                key = reg.OpenKey(reg.HKEY_LOCAL_MACHINE, r"Software\\WOW6432Node\\Google\\Chrome\\BLBeacon")
-                version, _ = reg.QueryValueEx(key, "version")
-                return version
-            except FileNotFoundError:
-                raise Exception("Chrome is not installed or does not detect my version.")
+        # Try to get version from google-chrome
+        result = subprocess.run(['google-chrome', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            return result.stdout.decode('utf-8').strip().split(' ')[-1]
+        
+        # If not found, try chromium
+        result = subprocess.run(['chromium', '--version'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        if result.returncode == 0:
+            return result.stdout.decode('utf-8').strip().split(' ')[-1]
+
+        # If Chrome or Chromium is not installed, raise an exception
+        raise Exception("Chrome or Chromium is not installed.")
+        
+    except Exception as e:
+        raise Exception(f"Error detecting Chrome version: {str(e)}")
+
+# Example usage
+try:
+    chrome_version = get_installed_chrome_version()
+    print(f"Installed Chrome version: {chrome_version}")
+except Exception as e:
+    print(e)raise Exception("Chrome is not installed or does not detect my version.")
 
 def get_chromedriver_path():
     base_path = os.path.join(os.getenv("USERPROFILE"), '.wdm', 'drivers', 'chromedriver', 'win64')
