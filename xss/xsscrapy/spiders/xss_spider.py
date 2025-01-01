@@ -192,7 +192,7 @@ class XSSspider(CrawlSpider):
         test_headers = []
         test_headers.append('Referer')
         if 'UA' in response.meta:
-            if response.meta['UA'] in body:
+            if response.meta['UA'] in body.decode('utf-8', 'ignore'):
                 test_headers.append('User-Agent')
         header_reqs = self.make_header_reqs(orig_url, payload, test_headers)
         if header_reqs:
