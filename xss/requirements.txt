@@ -1,3 +1,12 @@
-selenium
-webdriver-manager
-colorama
+scrapy
+pybloomfilter
+requests
+bs4
+twisted==16.6.0
+w3lib
+lxml
+six
+cssselect
+pyopenssl
+cryptography
+queuelib
