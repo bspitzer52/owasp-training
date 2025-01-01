@@ -165,7 +165,7 @@ if __name__ == '__main__':
         payload_file = "payload.txt"  # File is in the same directory
         payload = payloads(payload_file)  # Read payloads from payload.txt
         
-        # Initialize the Selenium WebDriver
+        # Initialize the Selenium WebDriver (Ensure it's initialized before use)
         driver = get_selenium_driver()
 
         if choice == "1":
