@@ -157,6 +157,8 @@ if __name__ == '__main__':
     4)Fetch Form Count
     5)Fetch Input Box
     '''
+    driver = None  # Initialize driver variable here, to avoid reference before assignment
+
     try:
         print(choices)
         choice = input("Make a Choice -->")
@@ -215,5 +217,6 @@ if __name__ == '__main__':
     except KeyboardInterrupt:
         print("Bye Bye.. Exiting")
     finally:
-        # Close the Selenium driver after usage
-        driver.quit()
+        # Ensure that the driver is only quit if it's initialized
+        if driver:
+            driver.quit()
