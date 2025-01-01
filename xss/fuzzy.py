@@ -2,6 +2,9 @@ import requests
 from bs4 import BeautifulSoup
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 from termcolor import colored
 from time import time
 
@@ -14,10 +17,17 @@ def init_driver():
     driver = webdriver.Chrome(options=chrome_options)
     return driver
 
-# Updated get_inputs function using Selenium
+# Updated get_inputs function using Selenium with explicit wait
 def get_inputs(url, driver):
     # Load the page using Selenium
     driver.get(url)
+
+    # Wait until some input elements (like a search bar) are loaded
+    try:
+        WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.XPATH, "//input")))
+    except:
+        print("No input fields found after waiting.")
+        return []
 
     # Give it time to load dynamic content if needed
     driver.implicitly_wait(5)
