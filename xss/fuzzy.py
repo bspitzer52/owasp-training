@@ -95,14 +95,7 @@ def get_installed_chrome_version():
         
     except Exception as e:
         raise Exception(f"Error detecting Chrome version: {str(e)}")
-
-# Example usage
-try:
-    chrome_version = get_installed_chrome_version()
-    print(f"Installed Chrome version: {chrome_version}")
-except Exception as e:
-    print(e)raise Exception("Chrome is not installed or does not detect my version.")
-
+        
 def get_chromedriver_path():
     base_path = os.path.join(os.getenv("USERPROFILE"), '.wdm', 'drivers', 'chromedriver', 'win64')
     
