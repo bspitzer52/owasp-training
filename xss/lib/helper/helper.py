@@ -1,7 +1,5 @@
 '''
-XSSCon - 2019/2020
-This project was created by menkrep1337 with 407Aex team. 
-Copyright under the MIT license
+XSS tool
 '''
 import requests, json
 ##### Warna ####### 
@@ -26,16 +24,16 @@ def session(proxies,headers,cookie):
 	r.cookies.update(json.loads(cookie))
 	return r
 
-logo=G+"""__  ______ ____   ____
-\ \/ / ___/ ___| / ___|___  _ __
- \  /\___ \___ \| |   / _ \| '_ \ %s
- /  \ ___) |__) | |__| (_) | | | | %s
-/_/\_\____/____/ \____\___/|_| |_|
+logo=G+"""__  ___
+ \/ / ___/ ___| /
+ \  /\___ \___ \| %s
+ /  \ ___) |__) | %s
+/_/\_\____/____/ 
 <<<<<<< HEAD
-"""%(R+"{v0.5 Final}"+G,underline+C+"https://github.com/menkrep1337/XSSCon"+N+G)
+"""%(R+"{v0.5 Final}"+G,underline+C+"https://github.com/bspitzer52/owasp-trainings"+N+G)
 	
 ##=======
-"""%(R+"{v0.5 Final}"+G,underline+C+"https://github.com/menkrep1337/XSSCon"+N+G)
+"""%(R+"{v0.5 Final}"+G,underline+C+"https://github.com/bspitzer52/owasp-trainings"+N+G)
 	
->>>>>>> branch 'master' of https://github.com/menkrep1337/XSSCon
+>>>>>>> branch 'master' of https://github.com/bspitzer52/owasp-trainings
 """

@@ -1,8 +1,4 @@
-'''
-XSSCon - 2019/2020
-This project was created by menkrep1337 with 407Aex team. 
-Copyright under the MIT license
-'''
+
 import argparse
 from lib.helper.helper import *
 from lib.helper.Log import *
@@ -10,8 +6,7 @@ from lib.core import *
 from random import randint
 from lib.crawler.crawler import *
 epilog="""
-Github: https://www.github.com/menkrep1337/XSSCon
-Version: 0.5 Final
+Github: https://www.github.com/bspitzer52/owasp-training
 """
 def check(getopt):
 	payload=int(getopt.payload_level)
@@ -47,7 +42,7 @@ def start():
 	
 	getopt=parse.parse_args()
 	print(logo)
-	Log.info("Starting XSSCon...")
+	Log.info("Starting session...")
 	if getopt.u:
 		core.main(getopt.u,getopt.proxy,getopt.user_agent,check(getopt),getopt.cookie,getopt.method)
 		
@@ -59,11 +54,6 @@ def start():
 	elif getopt.about:
 		print("""
 ***************
-Project: XSSCon
-License: MIT
-Author: menkrep1337
-Last updates: 2019 may 26
-Note: Take your own RISK
 ****************
 """+epilog)
 	else:
